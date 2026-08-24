@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block titulo %}Detalle: {{ inc.incidencia }}{% endblock %}
+
+{% block contenido %}
+    <style>
+    details {
+        border: 1px solid var(--color-border);
+        border-radius: 0px;
+        margin-bottom: 10px;
+        background: #fff;
+    }
+    summary {
+        padding: 12px 15px;
+        font-weight: 600;
+        background: #f6f7f7;
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        color: #2c3338;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::before {
+        content: "\f0da"; /* FontAwesome caret-right */
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        margin-right: 10px;
+        transition: transform 0.2s;
+    }
+    details[open] summary::before {
+        transform: rotate(90deg);
+    }
+    .details-body {
+        padding: 15px;
+        border-top: 1px solid var(--color-border);
+    }
+    .data-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    .data-label {
+        font-size: 0.85em;
+        color: var(--color-text-muted);
+        margin-bottom: 3px;
+        text-transform: uppercase;
+    }
+    .data-value {
+        font-weight: 500;
+        color: var(--color-text);
+        white-space: pre-wrap;
+    }
+    </style>
+
+    <!-- Encabezado -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; font-weight: 500;"><i class="fa-solid fa-file-invoice"></i> Detalle de Incidencia: {{ inc.incidencia }}</h2>
+            <a href="/navegador" class="btn btn-info"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+        </div>
+        <div>
+            <p style="color: var(--color-text-muted); margin: 5px 0 0 0;">
+                Procesado: {{ inc.fecha_procesado or 'N/A' }} | PDF: {{ inc.pdf_filename or 'N/A' }}
+            </p>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; margin-top: 15px;">
+            <!-- Selector de estado sin emojis -->
+            <select id="estadoSelect" onchange="cambiarEstado(this.value)" class="btn" style="padding: 8px 12px; border-radius: 0;">
+                <option value="No iniciado" {% if inc.estado == 'No iniciado' %}selected{% endif %}>No iniciado</option>
+                <option value="En proceso" {% if inc.estado == 'En proceso' %}selected{% endif %}>En proceso</option>
+                <option value="Completado" {% if inc.estado == 'Completado' %}selected{% endif %}>Completado</option>
+            </select>
+            
+            {% if inc.pdf_filename %}
+            <a href="/pdfs/{{ inc.pdf_filename }}" target="_blank" class="btn btn-primary" style="padding: 8px 12px; border-radius: 0; text-decoration: none;">
+                <i class="fa-solid fa-file-pdf"></i> Ver PDF Original
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Acordeones (Cerrados por defecto) -->
+    <details>
+        <summary>Llamadas</summary>
+        <div class="details-body data-grid">
+            <div><div class="data-label">Llamadas totales</div><div class="data-value">{{ inc.llamadas_count or '0' }}</div></div>
+        </div>
+    </details>
+
+    <details>
+        <summary>Incidencia</summary>
+        <div class="details-body data-grid">
+            <div><div class="data-label">INC</div><div class="data-value">{{ inc.incidencia or 'N/A' }}</div></div>
+            <div><div class="data-label">Prioridad</div><div class="data-value">{{ inc.prioridad or 'N/A' }}</div></div>
+            <div><div class="data-label">Tipo</div><div class="data-value">{{ inc.tipo_incidencia or 'N/A' }}</div></div>
+            <div><div class="data-label">Estado ADMS</div><div class="data-value">{{ inc.estado_adms or 'N/A' }}</div></div>
+            <div><div class="data-label">Creado en</div><div class="data-value">{{ inc.creado_en or 'N/A' }}</div></div>
+            <div><div class="data-label">Creado por</div><div class="data-value">{{ inc.creado_por or 'N/A' }}</div></div>
+        </div>
+    </details>
+
+    <details>
+        <summary>Dispositivos</summary>
+        <div class="details-body data-grid">
+            <div><div class="data-label">Nombre del Dispositivo</div><div class="data-value">{{ inc.dispositivo_nombre or 'N/A' }}</div></div>
+            <div><div class="data-label">Tipo de Dispositivo</div><div class="data-value">{{ inc.dispositivo_tipo or 'N/A' }}</div></div>
+            <div><div class="data-label">ID Medidor</div><div class="data-value">{{ inc.id_medidor or 'N/A' }}</div></div>
+        </div>
+    </details>
+
+    <details>
+        <summary>Resolución</summary>
+        <div class="details-body data-grid">
+            <div><div class="data-label">Causa</div><div class="data-value">{{ inc.causa or 'N/A' }}</div></div>
+            <div><div class="data-label">Subcausa</div><div class="data-value">{{ inc.subcausa or 'N/A' }}</div></div>
+            <div><div class="data-label">Tipo de Construcción</div><div class="data-value">{{ inc.tipo_construccion or 'N/A' }}</div></div>
+            <div><div class="data-label">Componente con Fallo</div><div class="data-value">{{ inc.componente_fallo or 'N/A' }}</div></div>
+        </div>
+    </details>
+
+    <details>
+        <summary>Cuadrillas</summary>
+        <div class="details-body data-grid">
+            <div><div class="data-label">Cuadrillas Asignadas</div><div class="data-value">{{ inc.cuadrillas or 'N/A' }}</div></div>
+            <div><div class="data-label">Tipo Cuadrilla (Asignación)</div><div class="data-value">{{ inc.tipo_cuadrilla or 'N/A' }}</div></div>
+        </div>
+    </details>
+
+    <details>
+        <summary>Problemas</summary>
+        <div class="details-body">
+            <div class="data-label">Observaciones Manuales</div>
+            <div class="data-value" onclick="editarCampo('observaciones', this)" style="cursor: pointer; padding: 10px; border: 1px dashed #ccc; margin-top: 5px;">{{ inc.observaciones or 'Click para editar' }}</div>
+        </div>
+    </details>
+
+    <details>
+        <summary>Ubicación de la incidencia</summary>
+        <div class="details-body data-grid">
+            <div><div class="data-label">Localización Red</div><div class="data-value">{{ inc.loc_red or 'N/A' }}</div></div>
+            <div>
+                <div class="data-label">Coordenadas</div>
+                <div class="data-value">
+                    {% if inc.coordenadas %}
+                    <a href="https://www.google.com/maps?q={{ inc.coordenadas | urlencode }}" target="_blank" style="color: var(--color-primary); text-decoration: none;">
+                        {{ inc.coordenadas }}
+                    </a>
+                    {% else %}N/A{% endif %}
+                </div>
+            </div>
+            <div><div class="data-label">Alimentador Actual</div><div class="data-value">{{ inc.alimentador_actual or 'N/A' }}</div></div>
+            <div><div class="data-label">Alimentador Normal</div><div class="data-value">{{ inc.alimentador_normal or 'N/A' }}</div></div>
+        </div>
+    </details>
+
+    <details>
+        <summary>Operaciones de maniobra</summary>
+        <div class="details-body data-grid">
+            <div style="grid-column: 1 / -1;"><div class="data-label">Instrucción (Operaciones)</div><div class="data-value">{{ inc.instruccion or 'N/A' }}</div></div>
+        </div>
+    </details>
+
+    <details>
+        <summary>Clientes</summary>
+        <div class="details-body data-grid">
+            <div><div class="data-label">Afectados</div><div class="data-value">{{ inc.afectados or 'N/A' }}</div></div>
+            <div><div class="data-label">Potencia Afectados (kW)</div><div class="data-value">{{ inc.potencia_afectados_kw or 'N/A' }}</div></div>
+            <div><div class="data-label">CMI (Minutos Cliente Interrumpido)</div><div class="data-value">{{ inc.cmi or 'N/A' }}</div></div>
+        </div>
+    </details>
+
+    <details>
+        <summary>Anidada / Par de incidencias</summary>
+        <div class="details-body data-grid">
+            <div><div class="data-label">Estado ADMS Vinculado</div><div class="data-value">{{ inc.estado_energia or 'N/A' }}</div></div>
+            <div><div class="data-label">Subtipo</div><div class="data-value">{{ inc.subtipo or 'N/A' }}</div></div>
+        </div>
+    </details>
+
+    <details>
+        <summary>Transformador de servicio</summary>
+        <div class="details-body data-grid">
+            <div><div class="data-label">Número Transformador</div><div class="data-value">{{ inc.num_transf or 'N/A' }}</div></div>
+            <div><div class="data-label">Tipo Fase</div><div class="data-value">{{ inc.tipo or 'N/A' }}</div></div>
+            <div><div class="data-label">Potencia Transformador</div><div class="data-value">{{ inc.potencia_transf or 'N/A' }}</div></div>
+        </div>
+    </details>
+
+    <details>
+        <summary>Trabajo Adicional</summary>
+        <div class="details-body">
+            <div class="data-label">Descripción de Trabajo Adicional</div>
+            <div class="data-value" style="background: #f9f9f9; padding: 15px; border: 1px solid #eee;">{{ inc.trabajo_adicional or 'Ninguno reportado.' }}</div>
+        </div>
+    </details>
+
+    <!-- Modal para editar campos adicionales -->
+    <div class="card" style="margin-top: 20px;">
+        <h3><i class="fa-solid fa-pen-to-square"></i> Gestión Manual y ERP</h3>
+        <table class="incidencias-table">
+            <tr>
+                <th>Grupo</th><td onclick="editarCampo('grupo', this)" style="cursor: pointer;">{{ inc.grupo or 'Click para editar' }}</td>
+            </tr>
+            <tr>
+                <th>WR</th><td onclick="editarCampo('wr', this)" style="cursor: pointer;">{{ inc.wr or 'Click para editar' }}</td>
+            </tr>
+            <tr>
+                <th>Orden Bodega</th><td onclick="editarCampo('orden_bodega', this)" style="cursor: pointer;">{{ inc.orden_bodega or 'Click para editar' }}</td>
+            </tr>
+            <tr>
+                <th>Fecha Planificado</th><td onclick="editarCampo('fecha_planificado', this)" style="cursor: pointer;">{{ inc.fecha_planificado or 'Click para editar' }}</td>
+            </tr>
+            <tr>
+                <th>Hora Planificado</th><td onclick="editarCampo('hora_planificado', this)" style="cursor: pointer;">{{ inc.hora_planificado or 'Click para editar' }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        const INC_ID = '{{ inc.incidencia }}';
+
+        async function cambiarEstado(nuevoEstado) {
+            await fetch(`/api/incidencia/${INC_ID}/estado`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({estado: nuevoEstado})
+            });
+            location.reload();
+        }
+
+        async function editarCampo(campo, elem) {
+            const valorActual = elem.textContent.trim();
+            const nuevo = prompt(`Editar ${campo}:`, valorActual === 'Click para editar' ? '' : valorActual);
+            if (nuevo !== null) {
+                const body = {};
+                body[campo] = nuevo;
+                await fetch(`/api/incidencia/${INC_ID}/campos`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(body)
+                });
+                elem.textContent = nuevo || 'Click para editar';
+            }
+        }
+    </script>
+{% endblock %}

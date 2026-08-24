@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+env/
+.idea/
+.vscode/
+
+# Ignore local sqlite DBs if any fallbacks exist
+*.db
+*.sqlite3
+
+# Ignore heavy/sensitive PDF files
+pdfs_incidencias/*.pdf
+
+# Ignore generated images for OCR
+backend/temp_image_*.png
+
+# Ignore other local folders
+2026/
+INCIDENCIAS EXCEL/

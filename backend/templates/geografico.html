@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block titulo %}Geográfico{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style> #mapa { height: 80vh; width: 100%; border-radius: 8px; } </style>
+{% endblock %}
+{% block contenido %}
+    <h2>Visor Geográfico de Red</h2>
+    <div id="mapa"></div>
+    <script>
+        const map = L.map('mapa').setView([-1.249, -78.616], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        
+        // Simulación de pines en el mapa
+        L.marker([-1.225, -78.584]).addTo(map).bindPopup("<b>INC-11041561245</b><br>Trafo 794");
+        L.marker([-1.328, -78.716]).addTo(map).bindPopup("<b>INC-11031527816</b><br>Trafo 7145");
+    </script>
+{% endblock %}

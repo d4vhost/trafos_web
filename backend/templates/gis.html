@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block titulo %}GIS{% endblock %}
+
+{% block contenido %}
+    <div class="card">
+        <h2><i class="fa-solid fa-map"></i> Registro GIS — Cambios de Transformadores</h2>
+        <p style="color: var(--color-text-muted);">Cambios y reemplazos de transformadores detectados automáticamente desde los PDFs.</p>
+
+        <div class="table-wrapper">
+            <table class="incidencias-table">
+                <tr>
+                    <th>Estado</th>
+                    <th>Tarea</th>
+                    <th>Tipo</th>
+                    <th>Trafo Antiguo</th>
+                    <th>Potencia Ant.</th>
+                    <th>Trafo Nuevo</th>
+                    <th>Potencia Nuevo</th>
+                    <th>Poste</th>
+                    <th>Fecha Realización</th>
+                    <th>INC</th>
+                    <th>Documento</th>
+                    <th>Observación</th>
+                </tr>
+                {% for g in entries %}
+                <tr>
+                    <td>{{ g.estado or '' }}</td>
+                    <td>{{ g.tarea or '' }}</td>
+                    <td>{{ g.tipo or '' }}</td>
+                    <td>{{ g.antiguo_trafo or '' }}</td>
+                    <td>{{ g.antiguo_potencia or '' }}</td>
+                    <td>{{ g.nuevo_trafo or '' }}</td>
+                    <td>{{ g.nuevo_potencia or '' }}</td>
+                    <td>{{ g.poste_nuevo or '' }}</td>
+                    <td>{{ g.fecha_realizacion or '' }}</td>
+                    <td><a href="/detalle/{{ g.inc }}" target="_blank">{{ g.inc }}</a></td>
+                    <td>{{ g.documento or '' }}</td>
+                    <td>{{ g.observacion or '' }}</td>
+                </tr>
+                {% endfor %}
+                {% if not entries %}
+                <tr><td colspan="12" style="text-align: center; padding: 40px; color: #999;">No hay entradas GIS registradas.</td></tr>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+{% endblock %}

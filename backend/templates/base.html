@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Incidencias EEASA</title>
+    <!-- Evitar error 404 del favicon -->
+    <link rel="icon" href="data:,">
+    <!-- CSS Propio -->
+    <link rel="stylesheet" href="/static/styles.css">
+    <!-- FontAwesome para íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- NAVBAR (Estilo WP Admin Bar) -->
+    <nav class="navbar">
+        <a href="/navegador" class="navbar-brand">
+            Gestión de Incidencias EEASA
+        </a>
+        <div class="navbar-links">
+            <a href="/navegador" {% if request.url.path == '/navegador' %}class="active"{% endif %}>
+                <i class="fa-solid fa-list-ul"></i> Incidencias
+            </a>
+            <a href="/analizadores" {% if request.url.path == '/analizadores' %}class="active"{% endif %}>
+                <i class="fa-solid fa-chart-line"></i> Analizadores
+            </a>
+            <a href="/gis" {% if request.url.path == '/gis' %}class="active"{% endif %}>
+                <i class="fa-solid fa-map-location-dot"></i> GIS
+            </a>
+            <a href="/bodega" {% if request.url.path == '/bodega' %}class="active"{% endif %}>
+                <i class="fa-solid fa-box-open"></i> Bodega
+            </a>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="contenedor">
+        {% block contenido %}{% endblock %}
+    </div>
+
+</body>
+</html>

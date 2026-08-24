@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block titulo %}Gestión de Incidencias EEASA{% endblock %}
+
+{% block contenido %}
+    <!-- STATS -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-folder-open"></i></div>
+            <div class="stat-card-content">
+                <span class="stat-number">{{ stats.total }}</span>
+                <span class="stat-label">Total Procesadas</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-check-circle"></i></div>
+            <div class="stat-card-content">
+                <span class="stat-number">{{ stats.completados }}</span>
+                <span class="stat-label">Completadas</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-spinner"></i></div>
+            <div class="stat-card-content">
+                <span class="stat-number">{{ stats.en_proceso }}</span>
+                <span class="stat-label">En Proceso</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+            <div class="stat-card-content">
+                <span class="stat-number">{{ stats.no_iniciado }}</span>
+                <span class="stat-label">No Iniciadas</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN PANEL -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; font-weight: 500;"><i class="fa-solid fa-list-ul"></i> Gestión de Incidencias EEASA</h2>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" onclick="document.getElementById('modalProcesar').classList.add('active')">
+                    <i class="fa-solid fa-folder-tree"></i> Procesar Carpeta Completa
+                </button>
+            </div>
+        </div>
+
+        <!-- FILTROS -->
+        <form class="filtros-bar" method="GET" action="/navegador">
+            <div class="filtro-group">
+                <label>Buscar INC / Alimentador</label>
+                <input type="text" name="buscar" value="{{ filtros.buscar }}" placeholder="Ej: 110415...">
+            </div>
+            <div class="filtro-group">
+                <label>Estado</label>
+                <select name="estado">
+                    <option value="">Todos</option>
+                    <option value="Completado" {% if filtros.estado == 'Completado' %}selected{% endif %}>Completado</option>
+                    <option value="En proceso" {% if filtros.estado == 'En proceso' %}selected{% endif %}>En proceso</option>
+                    <option value="No iniciado" {% if filtros.estado == 'No iniciado' %}selected{% endif %}>No iniciado</option>
+                </select>
+            </div>
+            <div class="filtro-group">
+                <label>Desde</label>
+                <input type="date" name="fecha_desde" value="{{ filtros.fecha_desde }}">
+            </div>
+            <div class="filtro-group">
+                <label>Hasta</label>
+                <input type="date" name="fecha_hasta" value="{{ filtros.fecha_hasta }}">
+            </div>
+            <button type="submit" class="btn btn-info" style="margin-bottom: 2px;">
+                <i class="fa-solid fa-filter"></i> Filtrar
+            </button>
+            <a href="/navegador" class="btn btn-info" style="margin-bottom: 2px;">
+                <i class="fa-solid fa-eraser"></i> Limpiar
+            </a>
+        </form>
+
+        <!-- TABLA -->
+        <div class="table-wrapper">
+            <table class="incidencias-table">
+                <thead>
+                    <tr>
+                        <th>Estado</th>
+                        <th>Prioridad</th>
+                        <th>INC</th>
+                        <th>Num Transf</th>
+                        <th>Tipo</th>
+                        <th>Potencia (kVA)</th>
+                        <th>Fecha Interrupción</th>
+                        <th>Alimentador Actual</th>
+                        <th>Coordenadas</th>
+                        <th>Causa</th>
+                        <th>ID Medidor</th>
+                        <th>Afectados</th>
+                        <th>Trabajo Adicional</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inc in incidencias %}
+                    <tr>
+                        <td style="text-transform: uppercase; font-size: 0.85em;">{{ inc.estado or 'No iniciado' }}</td>
+                        <td>{{ inc.prioridad.split('-')[-1].strip() if inc.prioridad and '-' in inc.prioridad else inc.prioridad }}</td>
+                        <td style="font-weight: 600; color: var(--color-primary);">{{ inc.incidencia }}</td>
+                        <td>{{ inc.num_transf or '' }}</td>
+                        <td>{{ inc.tipo or '' }}</td>
+                        <td>{{ inc.potencia_transf or '' }}</td>
+                        <td>
+                            {% if inc.fecha_interrupcion %}
+                                {% set parts = inc.fecha_interrupcion.split() %}
+                                {{ parts[0] }}<br>{{ parts[1:] | join(' ') }}
+                            {% endif %}
+                        </td>
+                        <td>{{ inc.alimentador_actual or '' }}</td>
+                        <td>
+                            {% if inc.coordenadas %}
+                            <div style="font-size: 0.9em; word-break: break-all;">
+                                <a href="https://www.google.com/maps?q={{ inc.coordenadas | urlencode }}" target="_blank" style="color: var(--color-primary); text-decoration: none; font-weight: 500;">
+                                    {{ inc.coordenadas }}
+                                </a>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>{{ inc.causa or '' }}</td>
+                        <td>{{ inc.id_medidor or '' }}</td>
+                        <td>{{ inc.afectados or '' }}</td>
+                        <td style="text-transform: uppercase; font-size: 0.85em;">
+                            {% if inc.tipo_cuadrilla == 'Trabajo Adicional' or inc.es_trabajo_adicional %}Sí requiere{% else %}No requiere{% endif %}
+                        </td>
+                        <td>
+                            <a href="/detalle/{{ inc.incidencia }}" class="btn btn-primary" style="padding: 5px 10px; font-size: 0.85em; white-space: nowrap;">Ver detalles</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not incidencias %}
+                    <tr><td colspan="12" style="text-align: center; padding: 40px; color: #999;">No hay incidencias que coincidan con los filtros.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PAGINACIÓN -->
+        <div class="pagination">
+            {% if current_page > 1 %}
+                <a href="/navegador?page={{ current_page - 1 }}&estado={{ filtros.estado }}&buscar={{ filtros.buscar }}&fecha_desde={{ filtros.fecha_desde }}&fecha_hasta={{ filtros.fecha_hasta }}" class="page-btn"><i class="fa-solid fa-chevron-left"></i> Anterior</a>
+            {% endif %}
+            
+            <span class="page-btn active">Página {{ current_page }} de {{ total_pages }}</span>
+            
+            {% if current_page < total_pages %}
+                <a href="/navegador?page={{ current_page + 1 }}&estado={{ filtros.estado }}&buscar={{ filtros.buscar }}&fecha_desde={{ filtros.fecha_desde }}&fecha_hasta={{ filtros.fecha_hasta }}" class="page-btn">Siguiente <i class="fa-solid fa-chevron-right"></i></a>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Modal Batch -->
+    <div id="modalProcesar" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0;"><i class="fa-solid fa-folder-tree"></i> Procesar Carpeta</h3>
+            <p>Se leerán todos los PDFs en la carpeta montada mediante OCR para extraer los datos.</p>
+            <button class="btn btn-primary" onclick="iniciarProcesamiento()">Iniciar Procesamiento</button>
+            <button class="btn btn-info" onclick="document.getElementById('modalProcesar').classList.remove('active')">Cerrar</button>
+            
+            <div id="progresoProcesamiento" class="progress-bar">
+                <div class="fill" style="width: 100%;"></div>
+            </div>
+            <p id="mensajeProceso" style="font-size: 0.85em; color: var(--color-text-muted);"></p>
+        </div>
+    </div>
+
+    <script>
+        async function cambiarEstadoRapido(inc_id, nuevoEstado) {
+            try {
+                await fetch(`/api/incidencia/${inc_id}/estado`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({estado: nuevoEstado})
+                });
+                location.reload(); // Recargar para actualizar los contadores superiores
+            } catch (error) {
+                alert('Error al cambiar el estado.');
+            }
+        }
+
+        function iniciarProcesamiento() {
+            document.getElementById('progresoProcesamiento').classList.add('active');
+            document.getElementById('mensajeProceso').innerText = 'Procesando (esto puede tardar varios minutos por el OCR)...';
+            
+            fetch('/procesar-carpeta', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('progresoProcesamiento').classList.remove('active');
+                document.getElementById('mensajeProceso').innerText = `Completado: ${data.procesados} procesados, ${data.duplicados} duplicados.`;
+                setTimeout(() => window.location.reload(), 2000);
+            })
+            .catch(err => {
+                document.getElementById('progresoProcesamiento').classList.remove('active');
+                document.getElementById('mensajeProceso').innerText = 'Error en el procesamiento.';
+            });
+        }
+    </script>
+{% endblock %}

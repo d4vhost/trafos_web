@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block titulo %}Bodega{% endblock %}
+
+{% block contenido %}
+    <div class="card">
+        <h2><i class="fa-solid fa-boxes-stacked"></i> Control de Bodega y Materiales</h2>
+        <p style="color: var(--color-text-muted);">Registro de materiales y órdenes de bodega.</p>
+
+        <div class="table-wrapper">
+            <table class="incidencias-table">
+                <tr>
+                    <th>Retirado</th>
+                    <th>Año</th>
+                    <th>ID</th>
+                    <th>Evento</th>
+                    <th>Bodega</th>
+                    <th>Id Orden</th>
+                    <th>Etapa Funcional</th>
+                    <th>Código</th>
+                    <th>Material</th>
+                    <th>Cantidad</th>
+                    <th>Disponible</th>
+                    <th>Observaciones</th>
+                </tr>
+                {% for b in items %}
+                <tr>
+                    <td>{{ b.retirado or '' }}</td>
+                    <td>{{ b.anio or '' }}</td>
+                    <td>{{ b.id_evento or '' }}</td>
+                    <td>{{ b.evento or '' }}</td>
+                    <td>{{ b.bodega_num or '' }}</td>
+                    <td>{{ b.id_orden or '' }}</td>
+                    <td>{{ b.etapa_funcional or '' }}</td>
+                    <td>{{ b.codigo or '' }}</td>
+                    <td>{{ b.nombre_material or '' }}</td>
+                    <td>{{ b.cantidad or '' }}</td>
+                    <td>{{ b.disponible or '' }}</td>
+                    <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ b.observaciones or '' }}</td>
+                </tr>
+                {% endfor %}
+                {% if not items %}
+                <tr><td colspan="12" style="text-align: center; padding: 40px; color: #999;">No hay registros de bodega.</td></tr>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+{% endblock %}

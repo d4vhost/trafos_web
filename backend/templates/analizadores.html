@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block titulo %}Analizadores{% endblock %}
+
+{% block contenido %}
+    <div class="card">
+        <h2><i class="fa-solid fa-chart-simple"></i> Registro de Analizadores</h2>
+        <p style="color: var(--color-text-muted);">Analizadores de carga detectados automáticamente desde los PDFs de incidencias.</p>
+
+        <div class="table-wrapper">
+            <table class="incidencias-table">
+                <tr>
+                    <th>Analizado</th>
+                    <th>Fecha Instalación</th>
+                    <th>Fecha Retiro</th>
+                    <th>INC</th>
+                    <th>Trafo</th>
+                    <th>Potencia</th>
+                    <th>Tipo</th>
+                    <th>Alimentador</th>
+                    <th>Resp. Instalación</th>
+                    <th>Resp. Retiro</th>
+                    <th>Observación</th>
+                </tr>
+                {% for a in analizadores %}
+                <tr>
+                    <td>
+                        {% if a.analizado == 'Si' %}
+                            <span class="badge badge-completado">Sí</span>
+                        {% else %}
+                            <span class="badge badge-no-iniciado">No</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ a.fecha_instalacion or '' }}</td>
+                    <td>{{ a.fecha_retiro or '' }}</td>
+                    <td><a href="/detalle/{{ a.inc }}" target="_blank">{{ a.inc }}</a></td>
+                    <td>{{ a.trafo or '' }}</td>
+                    <td>{{ a.potencia or '' }}</td>
+                    <td>{{ a.tipo or '' }}</td>
+                    <td>{{ a.alimentador or '' }}</td>
+                    <td>{{ a.resp_instalacion or '' }}</td>
+                    <td>{{ a.resp_retiro or '' }}</td>
+                    <td>{{ a.observacion or '' }}</td>
+                </tr>
+                {% endfor %}
+                {% if not analizadores %}
+                <tr><td colspan="11" style="text-align: center; padding: 40px; color: #999;">No hay analizadores registrados.</td></tr>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+{% endblock %}
