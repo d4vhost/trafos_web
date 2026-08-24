@@ -37,7 +37,7 @@
     <!-- MAIN PANEL -->
     <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 style="margin: 0; font-weight: 500;"><i class="fa-solid fa-list-ul"></i> Gestión de Incidencias EEASA</h2>
+            <h2 style="margin: 0; font-weight: 500;"><i class="fa-solid fa-bolt"></i> Trafos Web EEASA</h2>
             <div style="display: flex; gap: 10px;">
                 <button class="btn btn-primary" onclick="document.getElementById('modalProcesar').classList.add('active')">
                     <i class="fa-solid fa-folder-tree"></i> Procesar Carpeta Completa
@@ -91,7 +91,6 @@
                         <th>Alimentador Actual</th>
                         <th>Coordenadas</th>
                         <th>Causa</th>
-                        <th>ID Medidor</th>
                         <th>Afectados</th>
                         <th>Trabajo Adicional</th>
                         <th>Acciones</th>
@@ -123,7 +122,6 @@
                             {% endif %}
                         </td>
                         <td>{{ inc.causa or '' }}</td>
-                        <td>{{ inc.id_medidor or '' }}</td>
                         <td>{{ inc.afectados or '' }}</td>
                         <td style="text-transform: uppercase; font-size: 0.85em;">
                             {% if inc.tipo_cuadrilla == 'Trabajo Adicional' or inc.es_trabajo_adicional %}Sí requiere{% else %}No requiere{% endif %}
