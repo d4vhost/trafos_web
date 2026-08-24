@@ -86,7 +86,6 @@
                         <th>INC</th>
                         <th>Num Transf</th>
                         <th>Tipo</th>
-                        <th>Potencia</th>
                         <th>Fecha Interrupción</th>
                         <th>Alimentador Actual</th>
                         <th>Coordenadas</th>
@@ -104,7 +103,6 @@
                         <td style="font-weight: 600; color: var(--color-primary);">{{ inc.incidencia }}</td>
                         <td>{{ inc.num_transf or '' }}</td>
                         <td>{{ inc.tipo or '' }}</td>
-                        <td>{{ inc.potencia_transf or '' }}</td>
                         <td>
                             {% if inc.fecha_interrupcion %}
                                 {% set parts = inc.fecha_interrupcion.split() %}
