@@ -260,11 +260,14 @@
                     const res = await fetch('/api/progreso/' + batchId);
                     const p = await res.json();
                     
+                    // Percentage = completados / total (not the one being processed)
                     const pct = p.total > 0 ? Math.round((p.current / p.total) * 100) : 0;
                     document.getElementById('progresoFill').style.width = pct + '%';
                     document.getElementById('progresoPorcentaje').innerText = pct + '%';
-                    document.getElementById('progresoTexto').innerText = 'Archivo ' + p.current + ' de ' + p.total;
-                    document.getElementById('progresoArchivo').innerText = p.current_file ? ('Procesando: ' + p.current_file) : '';
+                    // Display which file is actively being processed
+                    const idx = p.procesando_index || 0;
+                    document.getElementById('progresoTexto').innerText = idx > 0 ? ('Procesando ' + idx + ' de ' + p.total) : 'Iniciando...';
+                    document.getElementById('progresoArchivo').innerText = p.current_file ? ('OCR: ' + p.current_file) : '';
                     document.getElementById('progresoResumen').innerText = 
                         '✓ ' + p.procesados + ' nuevos | ↔ ' + p.repetidos + ' repetidos | ✗ ' + p.errores + ' errores';
                     

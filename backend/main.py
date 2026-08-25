@@ -248,9 +248,10 @@ def _process_pdf_background(file_path, filename, batch_id):
 def _process_batch_background(files_info, batch_id):
     """Process a batch of PDFs sequentially in a background thread."""
     for i, (file_path, filename) in enumerate(files_info):
-        upload_progress[batch_id]["current"] = i + 1
         upload_progress[batch_id]["current_file"] = filename
+        upload_progress[batch_id]["procesando_index"] = i + 1  # which file is being worked on (1-based)
         _process_pdf_background(file_path, filename, batch_id)
+        upload_progress[batch_id]["current"] = i + 1  # increment AFTER completion
     upload_progress[batch_id]["done"] = True
 
 @app.post("/subir-lote")
@@ -272,7 +273,8 @@ async def subir_lote(files: list[UploadFile] = File(...)):
     
     upload_progress[batch_id] = {
         "total": len(files_info),
-        "current": 0,
+        "current": 0,           # files COMPLETED
+        "procesando_index": 0,  # file currently being processed (1-based)
         "current_file": "",
         "procesados": 0,
         "repetidos": 0,
