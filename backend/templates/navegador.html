@@ -175,13 +175,21 @@
             <h3 style="margin-top: 0;"><i class="fa-solid fa-cloud-arrow-up"></i> Subir PDFs</h3>
             <p>Selecciona los reportes PDF desde tu computadora para subirlos y extraer su información (OCR).</p>
             <input type="file" id="pdfFiles" multiple accept=".pdf" style="margin-bottom: 15px; width: 100%; border: 1px solid var(--color-border); padding: 10px;">
-            <button class="btn btn-primary" onclick="subirPdfs()">Subir y Procesar</button>
-            <button class="btn btn-info" onclick="document.getElementById('modalSubir').classList.remove('active')">Cerrar</button>
+            <button id="btnSubir" class="btn btn-primary" onclick="subirPdfs()">Subir y Procesar</button>
+            <button id="btnCerrarSubir" class="btn btn-info" onclick="document.getElementById('modalSubir').classList.remove('active')">Cerrar</button>
             
-            <div id="progresoSubida" class="progress-bar">
-                <div class="fill" style="width: 100%;"></div>
+            <!-- Barra de progreso visual -->
+            <div id="contenedorProgreso" style="display: none; margin-top: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span id="progresoTexto" style="font-size: 0.85em; font-weight: 600;"></span>
+                    <span id="progresoPorcentaje" style="font-size: 0.85em; font-weight: 600;"></span>
+                </div>
+                <div style="width: 100%; height: 20px; background: #e0e0e0; border: 1px solid var(--color-border); overflow: hidden;">
+                    <div id="progresoFill" style="height: 100%; width: 0%; background: var(--color-primary); transition: width 0.4s ease;"></div>
+                </div>
+                <p id="progresoArchivo" style="font-size: 0.8em; color: var(--color-text-muted); margin-top: 8px; word-break: break-all;"></p>
+                <p id="progresoResumen" style="font-size: 0.85em; color: var(--color-text-muted); margin-top: 5px;"></p>
             </div>
-            <p id="mensajeSubida" style="font-size: 0.85em; color: var(--color-text-muted);"></p>
         </div>
     </div>
 
@@ -194,12 +202,22 @@
             }
 
             const files = input.files;
+            const total = files.length;
             let procesados = 0, repetidos = 0, errores = 0;
             
-            document.getElementById('progresoSubida').classList.add('active');
+            // Mostrar barra y deshabilitar botones
+            document.getElementById('contenedorProgreso').style.display = 'block';
+            document.getElementById('btnSubir').disabled = true;
+            document.getElementById('btnSubir').innerText = 'Procesando...';
+            document.getElementById('btnCerrarSubir').style.display = 'none';
             
             for(let i = 0; i < files.length; i++) {
-                document.getElementById('mensajeSubida').innerText = `Procesando archivo ${i+1} de ${files.length}... (${files[i].name})`;
+                const pct = Math.round(((i) / total) * 100);
+                document.getElementById('progresoFill').style.width = pct + '%';
+                document.getElementById('progresoPorcentaje').innerText = pct + '%';
+                document.getElementById('progresoTexto').innerText = `Archivo ${i+1} de ${total}`;
+                document.getElementById('progresoArchivo').innerText = `Procesando: ${files[i].name}`;
+                document.getElementById('progresoResumen').innerText = `✓ ${procesados} nuevos | ↔ ${repetidos} repetidos | ✗ ${errores} errores`;
                 
                 const formData = new FormData();
                 formData.append("file", files[i]);
@@ -219,9 +237,18 @@
                 }
             }
 
-            document.getElementById('progresoSubida').classList.remove('active');
-            document.getElementById('mensajeSubida').innerHTML = `<strong style="color: var(--color-primary);">¡Completado!</strong> ${procesados} nuevos, ${repetidos} repetidos, ${errores} errores.`;
-            setTimeout(() => window.location.reload(), 2500);
+            // Completado: barra al 100%
+            document.getElementById('progresoFill').style.width = '100%';
+            document.getElementById('progresoFill').style.background = 'var(--color-success)';
+            document.getElementById('progresoPorcentaje').innerText = '100%';
+            document.getElementById('progresoTexto').innerText = '¡Completado!';
+            document.getElementById('progresoArchivo').innerText = '';
+            document.getElementById('progresoResumen').innerHTML = `<strong>${procesados} nuevos</strong> | ${repetidos} repetidos | ${errores} errores`;
+            
+            document.getElementById('btnSubir').style.display = 'none';
+            document.getElementById('btnCerrarSubir').style.display = 'inline-block';
+            document.getElementById('btnCerrarSubir').innerText = 'Cerrar y Actualizar';
+            document.getElementById('btnCerrarSubir').onclick = function() { window.location.reload(); };
         }
 
         async function cambiarEstadoRapido(inc_id, nuevoEstado) {
