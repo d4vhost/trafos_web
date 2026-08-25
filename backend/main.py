@@ -224,31 +224,75 @@ async def limpiar_datos(db: Session = Depends(get_db)):
         db.rollback()
         return {"mensaje": f"Error: {str(e)}", "eliminados": 0}
 
-@app.post("/subir-pdf-unico")
-async def subir_pdf_unico(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    if not os.path.exists(PDF_FOLDER):
-        os.makedirs(PDF_FOLDER, exist_ok=True)
-        
-    if not file.filename.lower().endswith('.pdf'):
-        return {"estado": "error", "detalle": "Archivo no es PDF"}
-        
-    file_path = os.path.join(PDF_FOLDER, file.filename)
-    
-    # Guardar archivo
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-        
-    # Procesar
-    inc_num = _extract_inc_from_filename(file.filename)
-    if inc_num and db.query(Incidencia).filter(Incidencia.incidencia == inc_num).first():
-        return {"estado": "duplicado"}
-        
+# --- Sistema de procesamiento en segundo plano ---
+import threading
+upload_progress = {}  # {batch_id: {total, current, current_file, procesados, repetidos, errores, done}}
+
+def _process_pdf_background(file_path, filename, batch_id):
+    """Process a single PDF in background and update progress."""
+    from database import SessionLocal
+    db = SessionLocal()
     try:
+        inc_num = _extract_inc_from_filename(filename)
+        if inc_num and db.query(Incidencia).filter(Incidencia.incidencia == inc_num).first():
+            upload_progress[batch_id]["repetidos"] += 1
+            return
         result = process_single_pdf(file_path)
         _save_result_to_db(result, db)
-        return {"estado": "procesado"}
-    except Exception as e:
-        return {"estado": "error", "detalle": str(e)}
+        upload_progress[batch_id]["procesados"] += 1
+    except Exception:
+        upload_progress[batch_id]["errores"] += 1
+    finally:
+        db.close()
+
+def _process_batch_background(files_info, batch_id):
+    """Process a batch of PDFs sequentially in a background thread."""
+    for i, (file_path, filename) in enumerate(files_info):
+        upload_progress[batch_id]["current"] = i + 1
+        upload_progress[batch_id]["current_file"] = filename
+        _process_pdf_background(file_path, filename, batch_id)
+    upload_progress[batch_id]["done"] = True
+
+@app.post("/subir-lote")
+async def subir_lote(files: list[UploadFile] = File(...)):
+    """Upload all PDFs instantly, then process in background."""
+    if not os.path.exists(PDF_FOLDER):
+        os.makedirs(PDF_FOLDER, exist_ok=True)
+    
+    batch_id = datetime.now().strftime("%Y%m%d%H%M%S")
+    files_info = []
+    
+    for file in files:
+        if not file.filename.lower().endswith('.pdf'):
+            continue
+        file_path = os.path.join(PDF_FOLDER, file.filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        files_info.append((file_path, file.filename))
+    
+    upload_progress[batch_id] = {
+        "total": len(files_info),
+        "current": 0,
+        "current_file": "",
+        "procesados": 0,
+        "repetidos": 0,
+        "errores": 0,
+        "done": False
+    }
+    
+    # Launch background thread
+    thread = threading.Thread(target=_process_batch_background, args=(files_info, batch_id))
+    thread.daemon = True
+    thread.start()
+    
+    return {"batch_id": batch_id, "total": len(files_info)}
+
+@app.get("/api/progreso/{batch_id}")
+async def get_progreso(batch_id: str):
+    """Poll endpoint for real-time progress."""
+    if batch_id not in upload_progress:
+        return {"error": "Lote no encontrado"}
+    return upload_progress[batch_id]
 
 @app.post("/subir-pdfs")
 async def subir_pdfs(files: list[UploadFile] = File(...), db: Session = Depends(get_db)):
