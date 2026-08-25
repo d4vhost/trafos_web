@@ -207,6 +207,32 @@ async def subir_pdf(archivo: UploadFile = File(...), db: Session = Depends(get_d
         return {"mensaje": f"✗ Error procesando {archivo.filename}: {str(e)}", "error": True}
 
 
+@app.post("/subir-pdf-unico")
+async def subir_pdf_unico(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    if not os.path.exists(PDF_FOLDER):
+        os.makedirs(PDF_FOLDER, exist_ok=True)
+        
+    if not file.filename.lower().endswith('.pdf'):
+        return {"estado": "error", "detalle": "Archivo no es PDF"}
+        
+    file_path = os.path.join(PDF_FOLDER, file.filename)
+    
+    # Guardar archivo
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    # Procesar
+    inc_num = _extract_inc_from_filename(file.filename)
+    if inc_num and db.query(Incidencia).filter(Incidencia.incidencia == inc_num).first():
+        return {"estado": "duplicado"}
+        
+    try:
+        result = process_single_pdf(file_path)
+        _save_result_to_db(result, db)
+        return {"estado": "procesado"}
+    except Exception as e:
+        return {"estado": "error", "detalle": str(e)}
+
 @app.post("/subir-pdfs")
 async def subir_pdfs(files: list[UploadFile] = File(...), db: Session = Depends(get_db)):
     if not os.path.exists(PDF_FOLDER):

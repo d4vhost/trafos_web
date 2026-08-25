@@ -186,35 +186,42 @@
     </div>
 
     <script>
-        function subirPdfs() {
+        async function subirPdfs() {
             const input = document.getElementById('pdfFiles');
             if (input.files.length === 0) {
                 alert("Selecciona al menos un archivo PDF.");
                 return;
             }
 
-            const formData = new FormData();
-            for (let i = 0; i < input.files.length; i++) {
-                formData.append("files", input.files[i]);
+            const files = input.files;
+            let procesados = 0, repetidos = 0, errores = 0;
+            
+            document.getElementById('progresoSubida').classList.add('active');
+            
+            for(let i = 0; i < files.length; i++) {
+                document.getElementById('mensajeSubida').innerText = `Procesando archivo ${i+1} de ${files.length}... (${files[i].name})`;
+                
+                const formData = new FormData();
+                formData.append("file", files[i]);
+                
+                try {
+                    const res = await fetch('/subir-pdf-unico', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    
+                    if(data.estado === 'procesado') procesados++;
+                    else if(data.estado === 'duplicado') repetidos++;
+                    else errores++;
+                } catch(err) {
+                    errores++;
+                }
             }
 
-            document.getElementById('progresoSubida').classList.add('active');
-            document.getElementById('mensajeSubida').innerText = 'Subiendo y procesando... (esto puede tardar según la cantidad de PDFs)';
-
-            fetch('/subir-pdfs', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('progresoSubida').classList.remove('active');
-                document.getElementById('mensajeSubida').innerText = `Completado: ${data.procesados} nuevos, ${data.duplicados} repetidos, ${data.errores} errores.`;
-                setTimeout(() => window.location.reload(), 2500);
-            })
-            .catch(err => {
-                document.getElementById('progresoSubida').classList.remove('active');
-                document.getElementById('mensajeSubida').innerText = 'Ocurrió un error de red o de servidor.';
-            });
+            document.getElementById('progresoSubida').classList.remove('active');
+            document.getElementById('mensajeSubida').innerHTML = `<strong style="color: var(--color-primary);">¡Completado!</strong> ${procesados} nuevos, ${repetidos} repetidos, ${errores} errores.`;
+            setTimeout(() => window.location.reload(), 2500);
         }
 
         async function cambiarEstadoRapido(inc_id, nuevoEstado) {
