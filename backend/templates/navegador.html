@@ -45,6 +45,9 @@
                 <button class="btn btn-primary" onclick="document.getElementById('modalProcesar').classList.add('active')">
                     <i class="fa-solid fa-folder-tree"></i> Procesar Carpeta Completa
                 </button>
+                <button class="btn btn-info" onclick="document.getElementById('modalLimpiar').classList.add('active')" style="border-color: var(--color-danger); color: var(--color-danger); background: white;">
+                    <i class="fa-solid fa-trash-can"></i> Limpiar Datos
+                </button>
             </div>
         </div>
 
@@ -193,7 +196,30 @@
         </div>
     </div>
 
+    <!-- Modal Limpiar Datos -->
+    <div id="modalLimpiar" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0;"><i class="fa-solid fa-trash-can" style="color: var(--color-danger);"></i> Limpiar Datos</h3>
+            <p>Se eliminarán <strong>todos los registros</strong> de incidencias y los PDFs del servidor. Esta acción no se puede deshacer.</p>
+            <button class="btn btn-primary" onclick="limpiarDatos()" style="background: var(--color-danger); border-color: var(--color-danger);">Sí, eliminar todo</button>
+            <button class="btn btn-info" onclick="document.getElementById('modalLimpiar').classList.remove('active')">Cancelar</button>
+            <p id="mensajeLimpiar" style="font-size: 0.85em; color: var(--color-text-muted); margin-top: 10px;"></p>
+        </div>
+    </div>
+
     <script>
+        async function limpiarDatos() {
+            document.getElementById('mensajeLimpiar').innerText = 'Limpiando...';
+            try {
+                const res = await fetch('/api/limpiar-datos', { method: 'POST' });
+                const data = await res.json();
+                document.getElementById('mensajeLimpiar').innerHTML = '<strong style="color: var(--color-success);">' + data.mensaje + '</strong>';
+                setTimeout(() => window.location.reload(), 1500);
+            } catch(err) {
+                document.getElementById('mensajeLimpiar').innerText = 'Error al limpiar.';
+            }
+        }
+
         async function subirPdfs() {
             const input = document.getElementById('pdfFiles');
             if (input.files.length === 0) {

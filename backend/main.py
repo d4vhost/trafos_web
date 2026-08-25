@@ -207,6 +207,23 @@ async def subir_pdf(archivo: UploadFile = File(...), db: Session = Depends(get_d
         return {"mensaje": f"✗ Error procesando {archivo.filename}: {str(e)}", "error": True}
 
 
+@app.post("/api/limpiar-datos")
+async def limpiar_datos(db: Session = Depends(get_db)):
+    """Borrar todos los registros de incidencias y PDFs para reiniciar."""
+    try:
+        total = db.query(Incidencia).count()
+        db.query(Incidencia).delete()
+        db.commit()
+        # Limpiar PDFs del servidor
+        if os.path.exists(PDF_FOLDER):
+            for f in os.listdir(PDF_FOLDER):
+                if f.lower().endswith('.pdf'):
+                    os.remove(os.path.join(PDF_FOLDER, f))
+        return {"mensaje": f"Se eliminaron {total} registros y sus PDFs.", "eliminados": total}
+    except Exception as e:
+        db.rollback()
+        return {"mensaje": f"Error: {str(e)}", "eliminados": 0}
+
 @app.post("/subir-pdf-unico")
 async def subir_pdf_unico(file: UploadFile = File(...), db: Session = Depends(get_db)):
     if not os.path.exists(PDF_FOLDER):
