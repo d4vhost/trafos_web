@@ -81,10 +81,11 @@ def parse_incidencia_data(text: str, pdf_filename: str) -> dict:
     data['potencia_transf'] = potencia_match.group(1) if potencia_match else ''
     
     # Extract coordinates from comments (e.g. Lat: -1.398, Lon: -78.522)
-    coord_match = re.search(r'[Ll]at(?:itud)?[:\s]+(-?\d+[,.]+\d+)[\s\S]{1,60}?[Ll]on(?:gitud)?[:\s]+(-?\d+[,.]+\d+)', text)
+    coord_match = re.search(r'[Ll]at(?:itud)?[:\s]+(-?\d+[.,]\d+)[\s\S]{1,60}?[Ll]on(?:gitud)?[:\s]+(-?\d+[.,]\d+)', text)
     if coord_match:
-        lat = coord_match.group(1).replace(',', '')
-        lon = coord_match.group(2).replace(',', '')
+        # OCR sometimes reads "." as ",." or ",". Clean: keep only the dot as decimal separator
+        lat = re.sub(r'[,]+', '', coord_match.group(1)) if '.' in coord_match.group(1) else coord_match.group(1).replace(',', '.')
+        lon = re.sub(r'[,]+', '', coord_match.group(2)) if '.' in coord_match.group(2) else coord_match.group(2).replace(',', '.')
         data['coordenadas'] = f"{lat}, {lon}"
     else:
         data['coordenadas'] = ''
