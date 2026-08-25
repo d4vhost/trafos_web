@@ -6,22 +6,31 @@ import json
 import os
 from datetime import datetime
 
-MAX_PAGES = 3  # Only process first 3 pages (all relevant data is there)
-OCR_DPI = 150  # 150 DPI is sufficient for text extraction (vs 300 = 4x faster)
-
 def extract_text_from_pdf(pdf_path: str) -> str:
     """Extract text from image-based PDF using OCR.
-    Optimized: lower DPI, grayscale, limited pages, fast Tesseract engine."""
+    Strategy: Page 1 (main data) + last page (resolution) + middle pages (calls/coords).
+    Uses lowest viable DPI per page type."""
     full_text = ""
     with pdfplumber.open(pdf_path) as pdf:
-        pages_to_process = pdf.pages[:MAX_PAGES]
-        for page in pages_to_process:
-            img = page.to_image(resolution=OCR_DPI).original
-            # Convert to grayscale for faster OCR
-            img = img.convert('L')
-            # PSM 6 = uniform block | OEM 1 = LSTM only (fastest neural engine)
-            text = pytesseract.image_to_string(img, config='--psm 6 --oem 1', lang='spa')
-            full_text += text + "\n\n--- PAGE BREAK ---\n\n"
+        total = len(pdf.pages)
+        
+        # Always process page 1 (main incident data) - 100 DPI is enough for structured data
+        if total >= 1:
+            img = pdf.pages[0].to_image(resolution=100).original.convert('L')
+            full_text += pytesseract.image_to_string(img, config='--psm 6 --oem 1', lang='spa')
+            full_text += "\n\n--- PAGE BREAK ---\n\n"
+        
+        # Process middle pages (calls, coords, comments) - pages 2 to second-to-last
+        for i in range(1, min(total - 1, 4)):  # max 3 middle pages
+            img = pdf.pages[i].to_image(resolution=150).original.convert('L')
+            full_text += pytesseract.image_to_string(img, config='--psm 6 --oem 1', lang='spa')
+            full_text += "\n\n--- PAGE BREAK ---\n\n"
+        
+        # Always process last page (resolution/causa data) if different from page 1
+        if total > 1:
+            img = pdf.pages[-1].to_image(resolution=150).original.convert('L')
+            full_text += pytesseract.image_to_string(img, config='--psm 6 --oem 1', lang='spa')
+    
     return full_text
 
 def parse_incidencia_data(text: str, pdf_filename: str) -> dict:
