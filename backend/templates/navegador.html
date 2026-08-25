@@ -278,9 +278,12 @@
                         document.getElementById('progresoResumen').innerHTML = 
                             '<strong>' + p.procesados + ' nuevos</strong> | ' + p.repetidos + ' repetidos | ' + p.errores + ' errores';
                         document.getElementById('btnSubir').style.display = 'none';
-                        document.getElementById('btnCerrarSubir').style.display = 'inline-block';
-                        document.getElementById('btnCerrarSubir').innerText = 'Cerrar y Actualizar';
-                        document.getElementById('btnCerrarSubir').onclick = function() { window.location.reload(); };
+                        
+                        // Auto-recargar después de 1.5 segundos para mostrar los datos
+                        document.getElementById('progresoArchivo').innerText = 'Actualizando tabla...';
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
                     }
                 } catch(err) { /* retry on next poll */ }
             }, 2000);  // Cada 2 segundos
