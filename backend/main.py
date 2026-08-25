@@ -212,6 +212,12 @@ async def limpiar_datos(db: Session = Depends(get_db)):
     """Borrar todos los registros de incidencias y PDFs para reiniciar."""
     try:
         total = db.query(Incidencia).count()
+        # Eliminar tablas hijas primero para evitar violaciones de clave foránea (Foreign Key)
+        db.query(Analizador).delete()
+        db.query(GISEntry).delete()
+        db.query(Eventual).delete()
+        db.query(Bodega).delete()
+        # Luego eliminar la tabla principal
         db.query(Incidencia).delete()
         db.commit()
         # Limpiar PDFs del servidor
