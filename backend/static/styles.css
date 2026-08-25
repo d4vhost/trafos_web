@@ -12,8 +12,8 @@
     --color-text-muted: #646970;
     --shadow: 0 1px 2px rgba(0,0,0,0.05);
     --shadow-lg: 0 2px 5px rgba(0,0,0,0.1);
-    /* Bordes ligeramente redondeados */
-    --radius: 6px; 
+    /* Bordes bien redondeados para todo el sistema */
+    --radius: 12px; 
 }
 
 * { box-sizing: border-box; }
@@ -96,12 +96,16 @@ body {
 .badge-especializada { background: #f6f7f7; color: var(--color-text); border: 1px solid var(--color-border); }
 
 /* ===== TABLA DE INCIDENCIAS (ZEBRA STRIPES) ===== */
-.table-wrapper { overflow-x: auto; }
+.table-wrapper { 
+    overflow-x: auto; 
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+}
 table.incidencias-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: collapse; /* Mantiene la tabla junta */
     font-size: 0.85em;
-    border: 1px solid var(--color-border);
+    border-style: hidden; /* Oculta el borde exterior de la tabla en sí para usar el del wrapper */
 }
 table.incidencias-table th {
     background: #f6f7f7;
@@ -157,7 +161,7 @@ table.incidencias-table tr:hover { background: #f0f6fc; }
 .btn {
     padding: 6px 14px;
     border: 1px solid transparent;
-    border-radius: var(--radius);
+    border-radius: 20px; /* Botones más redondeados, tipo píldora */
     cursor: pointer;
     font-weight: 500;
     font-size: 0.85em;
@@ -191,6 +195,7 @@ table.incidencias-table tr:hover { background: #f0f6fc; }
     color: var(--color-text);
     text-decoration: none;
     font-size: 0.85em;
+    border-radius: var(--radius);
 }
 .pagination a:hover { background: #f0f6fc; color: var(--color-primary); border-color: var(--color-primary); }
 .pagination span.active { background: var(--color-primary); color: white; border-color: var(--color-primary); }
@@ -324,18 +329,20 @@ table.comentarios-table td {
 /* ===== PROGRESS BAR ===== */
 .progress-bar {
     width: 100%;
-    height: 8px;
+    height: 12px;
     background: #f0f0f1;
     overflow: hidden;
     margin: 10px 0;
     display: none;
     border: 1px solid var(--color-border);
+    border-radius: 12px;
 }
 .progress-bar.active { display: block; }
 .progress-bar .fill {
     height: 100%;
     background: var(--color-primary);
     transition: width 0.3s;
+    border-radius: 12px;
 }
 
 /* ===== EDITABLE FIELDS ===== */
