@@ -6,16 +6,21 @@ import json
 import os
 from datetime import datetime
 
+MAX_PAGES = 3  # Only process first 3 pages (all relevant data is there)
+OCR_DPI = 150  # 150 DPI is sufficient for text extraction (vs 300 = 4x faster)
+
 def extract_text_from_pdf(pdf_path: str) -> str:
     """Extract text from image-based PDF using OCR.
-    Uses pdfplumber to convert pages to images, then pytesseract for OCR.
-    Concatenates all pages."""
+    Optimized: lower DPI, grayscale, limited pages, fast Tesseract engine."""
     full_text = ""
     with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            img = page.to_image(resolution=300).original
-            # PSM 6 forces uniform block of text, preventing column tearing
-            text = pytesseract.image_to_string(img, config='--psm 6', lang='spa')
+        pages_to_process = pdf.pages[:MAX_PAGES]
+        for page in pages_to_process:
+            img = page.to_image(resolution=OCR_DPI).original
+            # Convert to grayscale for faster OCR
+            img = img.convert('L')
+            # PSM 6 = uniform block | OEM 1 = LSTM only (fastest neural engine)
+            text = pytesseract.image_to_string(img, config='--psm 6 --oem 1', lang='spa')
             full_text += text + "\n\n--- PAGE BREAK ---\n\n"
     return full_text
 
