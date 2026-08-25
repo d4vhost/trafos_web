@@ -39,6 +39,9 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 style="margin: 0; font-weight: 500;"><i class="fa-solid fa-bolt"></i> Trafos Web EEASA</h2>
             <div style="display: flex; gap: 10px;">
+                <button class="btn btn-info" onclick="document.getElementById('modalSubir').classList.add('active')">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Subir PDFs
+                </button>
                 <button class="btn btn-primary" onclick="document.getElementById('modalProcesar').classList.add('active')">
                     <i class="fa-solid fa-folder-tree"></i> Procesar Carpeta Completa
                 </button>
@@ -166,7 +169,54 @@
         </div>
     </div>
 
+    <!-- Modal Subir PDFs -->
+    <div id="modalSubir" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0;"><i class="fa-solid fa-cloud-arrow-up"></i> Subir PDFs</h3>
+            <p>Selecciona los reportes PDF desde tu computadora para subirlos y extraer su información (OCR).</p>
+            <input type="file" id="pdfFiles" multiple accept=".pdf" style="margin-bottom: 15px; width: 100%; border: 1px solid var(--color-border); padding: 10px;">
+            <button class="btn btn-primary" onclick="subirPdfs()">Subir y Procesar</button>
+            <button class="btn btn-info" onclick="document.getElementById('modalSubir').classList.remove('active')">Cerrar</button>
+            
+            <div id="progresoSubida" class="progress-bar">
+                <div class="fill" style="width: 100%;"></div>
+            </div>
+            <p id="mensajeSubida" style="font-size: 0.85em; color: var(--color-text-muted);"></p>
+        </div>
+    </div>
+
     <script>
+        function subirPdfs() {
+            const input = document.getElementById('pdfFiles');
+            if (input.files.length === 0) {
+                alert("Selecciona al menos un archivo PDF.");
+                return;
+            }
+
+            const formData = new FormData();
+            for (let i = 0; i < input.files.length; i++) {
+                formData.append("files", input.files[i]);
+            }
+
+            document.getElementById('progresoSubida').classList.add('active');
+            document.getElementById('mensajeSubida').innerText = 'Subiendo y procesando... (esto puede tardar según la cantidad de PDFs)';
+
+            fetch('/subir-pdfs', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('progresoSubida').classList.remove('active');
+                document.getElementById('mensajeSubida').innerText = `Completado: ${data.procesados} nuevos, ${data.duplicados} repetidos, ${data.errores} errores.`;
+                setTimeout(() => window.location.reload(), 2500);
+            })
+            .catch(err => {
+                document.getElementById('progresoSubida').classList.remove('active');
+                document.getElementById('mensajeSubida').innerText = 'Ocurrió un error de red o de servidor.';
+            });
+        }
+
         async function cambiarEstadoRapido(inc_id, nuevoEstado) {
             try {
                 await fetch(`/api/incidencia/${inc_id}/estado`, {

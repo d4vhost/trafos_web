@@ -205,6 +205,41 @@ async def subir_pdf(archivo: UploadFile = File(...), db: Session = Depends(get_d
         return {"mensaje": f"✗ Error procesando {archivo.filename}: {str(e)}", "error": True}
 
 
+@app.post("/subir-pdfs")
+async def subir_pdfs(files: list[UploadFile] = File(...), db: Session = Depends(get_db)):
+    if not os.path.exists(PDF_FOLDER):
+        os.makedirs(PDF_FOLDER)
+        
+    resultados = {"procesados": 0, "errores": 0, "duplicados": 0, "detalles": []}
+    
+    for file in files:
+        if not file.filename.lower().endswith('.pdf'):
+            continue
+            
+        file_path = os.path.join(PDF_FOLDER, file.filename)
+        
+        # Guardar archivo
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        # Procesar
+        inc_num = _extract_inc_from_filename(file.filename)
+        if inc_num and db.query(Incidencia).filter(Incidencia.incidencia == inc_num).first():
+            resultados["duplicados"] += 1
+            resultados["detalles"].append({"archivo": file.filename, "estado": "duplicado"})
+            continue
+            
+        try:
+            result = process_single_pdf(file_path)
+            _save_result_to_db(result, db)
+            resultados["procesados"] += 1
+            resultados["detalles"].append({"archivo": file.filename, "estado": "procesado"})
+        except Exception as e:
+            resultados["errores"] += 1
+            resultados["detalles"].append({"archivo": file.filename, "estado": "error", "detalle": str(e)})
+
+    return resultados
+
 @app.post("/procesar-carpeta")
 async def procesar_carpeta(db: Session = Depends(get_db)):
     """Procesar todos los PDFs de la carpeta pdfs_incidencias."""
