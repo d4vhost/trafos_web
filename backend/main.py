@@ -18,6 +18,8 @@ templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 PDF_FOLDER = os.environ.get("PDF_FOLDER", "/data/pdfs")
+if not os.path.exists(PDF_FOLDER):
+    os.makedirs(PDF_FOLDER, exist_ok=True)
 app.mount("/pdfs", StaticFiles(directory=PDF_FOLDER), name="pdfs")
 
 @app.on_event("startup")
